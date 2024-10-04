@@ -9,15 +9,14 @@ class MovieRepositoryProvider extends ChangeNotifier {
   final List<Movie> _movieList = [];
   int _currentPage = 1;
   bool _isLoading = true;
+  String _sortBy = 'popular';
 
-  MovieRepositoryProvider();
-
-  Future<void> fetchMovies(String sortBy) async {
+  Future<void> fetchMovies() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final movies = await MovieApiService.fetchMovies(sortBy, _currentPage);
+      final movies = await MovieApiService.fetchMovies(_sortBy, _currentPage);
       if (movies.isNotEmpty) {
         _movieList.addAll(movies);
         _currentPage++;
@@ -35,9 +34,20 @@ class MovieRepositoryProvider extends ChangeNotifier {
   void resetMovies() {
     _movieList.clear();
     _currentPage = 1;
-    notifyListeners();
+    fetchMovies();
+    // notifyListeners();
   }
 
   List<Movie> get movieList => _movieList;
   bool get isLoading => _isLoading;
+
+  String get sortBy => _sortBy;
+
+  set sortBy(String value) {
+    if (_sortBy != value) {
+      _sortBy = value;
+      resetMovies();
+      // notifyListeners();
+    }
+  }
 }

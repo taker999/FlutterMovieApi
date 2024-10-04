@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,17 +17,48 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<void> _fetchMoviesFuture;
+  final scrollController = ScrollController();
+
+  // Keep track of whether more movies are currently being fetched
+  bool _isFetchingMore = false;
+
+  void _scrollListener() {
+    if(_isFetchingMore) return;
+    if (scrollController.position.pixels == scrollController.position.maxScrollExtent) {
+      _fetchMoreMovies();
+    }
+  }
+
+  void _fetchMoreMovies() {
+    if (!_isFetchingMore) {
+      _isFetchingMore = true;
+      final movieRepository =
+      Provider.of<MovieRepositoryProvider>(context, listen: false);
+      movieRepository.fetchMovies().whenComplete(() {
+        _isFetchingMore = false; // Reset fetching flag after completing
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    final movieRepository = Provider.of<MovieRepositoryProvider>(context, listen: false);
-    _fetchMoviesFuture = movieRepository.fetchMovies('top_rated');
+    scrollController.addListener(_scrollListener);
+    final movieRepository =
+    Provider.of<MovieRepositoryProvider>(context, listen: false);
+    _fetchMoviesFuture = movieRepository.fetchMovies();
+  }
+
+  @override
+  void dispose() {
+    scrollController.removeListener(_scrollListener);
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final movieRepository = Provider.of<MovieRepositoryProvider>(context);
+    log('build');
 
     return Scaffold(
       appBar: AppBar(
@@ -44,37 +77,55 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<void>(
-        future: _fetchMoviesFuture,
-        builder: (context, snapshot) {
-          if (movieRepository.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Consumer<MovieRepositoryProvider>(
+        builder: (context, movieRepository, child) => FutureBuilder(
+          future: _fetchMoviesFuture,
+          builder: (context, snapshot) {
+            if (movieRepository.isLoading && !_isFetchingMore) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.connectionState == ConnectionState.done && snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+            if (snapshot.connectionState == ConnectionState.done && snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
 
-          return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-            ),
-            itemCount: movieRepository.movieList.length,
-            itemBuilder: (context, index) {
-              final movie = movieRepository.movieList[index];
-              return GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailsScreen(movie: movie))),
-                child: CachedNetworkImage(
-                  imageUrl: 'https://image.tmdb.org/t/p/w500/${movie.posterPath}',
-                  placeholder: (context, url) => const CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                ),
-              );
-            },
-          );
-        },
+            return GridView.builder(
+              controller: scrollController,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
+              ),
+              itemCount: movieRepository.movieList.length,
+              itemBuilder: (context, index) {
+                final movie = movieRepository.movieList[index];
+                return Container(
+                  margin: const EdgeInsets.all(5),
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => MovieDetailsScreen(movie: movie))),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Hero(
+                        tag: movie.posterPath, // Use a unique tag for each movie
+                        child: CachedNetworkImage(
+                          imageUrl: 'https://image.tmdb.org/t/p/w500/${movie.posterPath}',
+                          placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
 }
+

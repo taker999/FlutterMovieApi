@@ -14,7 +14,12 @@ class MovieDetailsScreen extends StatelessWidget {
       appBar: AppBar(title: Text(movie.title)),
       body: Column(
         children: [
-          CachedNetworkImage(imageUrl: 'https://image.tmdb.org/t/p/w500/${movie.posterPath}'),
+          Hero(
+            tag: movie.posterPath,
+            child: CachedNetworkImage(
+              imageUrl: 'https://image.tmdb.org/t/p/w500/${movie.posterPath}',
+            ),
+          ),
           Text(movie.overview),
           Text('Rating: ${movie.voteAverage}'),
           Text('Release Date: ${movie.releaseDate}'),

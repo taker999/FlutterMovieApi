@@ -12,7 +12,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -24,9 +23,15 @@ class MyApp extends StatelessWidget {
           create: (context) => MovieRepositoryProvider(),
         ),
       ],
-      child: const MaterialApp(
-        title: 'Movies',
-        home: HomeScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Movies',
+            debugShowCheckedModeBanner: false,
+            theme: themeProvider.themeData,
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }
