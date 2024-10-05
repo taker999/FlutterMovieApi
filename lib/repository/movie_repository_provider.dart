@@ -10,6 +10,11 @@ class MovieRepositoryProvider extends ChangeNotifier {
   int _currentPage = 1;
   bool _isLoading = true;
   String _sortBy = 'popular';
+  //for storing searched users
+  final List<Movie> _searchList = [];
+  bool _isSearching = false;
+  // Keep track of whether more movies are currently being fetched
+  bool _isFetchingMore = false;
 
   Future<void> fetchMovies() async {
     _isLoading = true;
@@ -49,5 +54,29 @@ class MovieRepositoryProvider extends ChangeNotifier {
       resetMovies();
       // notifyListeners();
     }
+  }
+
+  set addSearchList(Movie m) {
+    _searchList.add(m);
+    notifyListeners();
+  }
+
+  void resetSearchList() {
+    _searchList.clear();
+    // notifyListeners();
+  }
+
+  List<Movie> get searchList => _searchList;
+
+  bool get isSearching => _isSearching;
+  set isSearching(bool val) {
+    _isSearching = val;
+    notifyListeners();
+  }
+
+  bool get isFetchingMore => _isFetchingMore;
+  set isFetchingMore(bool val) {
+    _isFetchingMore = val;
+    notifyListeners();
   }
 }

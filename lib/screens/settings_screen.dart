@@ -13,7 +13,10 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: const Text(
+          'Settings',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
+        ),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -34,6 +37,7 @@ class SettingsScreen extends StatelessWidget {
                 Text(
                   'Dark Mode',
                   style: TextStyle(
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.inversePrimary,
                   ),
@@ -67,6 +71,7 @@ class SettingsScreen extends StatelessWidget {
                 Text(
                   'Sort By',
                   style: TextStyle(
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.inversePrimary,
                   ),
@@ -74,7 +79,7 @@ class SettingsScreen extends StatelessWidget {
 
                 Consumer<MovieRepositoryProvider>(
                     builder: (context, movieRepositoryProvider, child) {
-                  return DropdownButton<String>(
+                  return DropdownButton(
                       value: movieRepositoryProvider.sortBy,
                       icon: const Icon(Icons.arrow_drop_down),
                       items: const [
